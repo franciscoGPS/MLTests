@@ -1,15 +1,14 @@
 class Home::Index < BrowserAction
   include DataAnalisys
   get "/" do
-    filename = "melb_data.csv"
+    filename = "cali_housing.csv"
     df = load(filename)
-    pp df.print
-    x_vector = ["Rooms", "Bathroom", "Landsize", "Lattitude", "Longtitude"]
-    y_vector = ["Price"]
+    
+    x_vector = ["Longitude"]
+    y_vector = ["MedHouseVal"]
 
     reg = DecisionTree::Regressor.new(df, x_vector, y_vector)
-    pp reg
-
+    reg.fit
     #######
     # Demo:
     # Let's look at some example to understand how Gini Impurity works.
@@ -18,7 +17,6 @@ class Home::Index < BrowserAction
 
     # this will return 0.5 - meaning, there's a 50% chance of misclassifying
     # a random example we draw from the dataset.
-    pp reg.gini
     html Home::IndexPage
   end
 end

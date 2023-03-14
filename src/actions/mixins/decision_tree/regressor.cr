@@ -7,12 +7,13 @@ module DecisionTree
     property df : Crysda::DataFrame
     property x_cols : Array(String)
     property y_col : Array(String)
+    property class_counts : Hash(String, Hash(String, Int32))
 
     def initialize(@df, @x_cols, @y_col)
       (x_cols + y_col).map { |col| raise ColumnNotFoundException.new("#{x_cols}") unless @df.cols.includes?(col) }
 
       raise WrongTargetFeatureSize.new unless y_col.size == 1
-
+      @class_counts = Hash(String, Hash(String, Int32)).new
       
 
       pp "in the regressor module"
@@ -33,16 +34,13 @@ module DecisionTree
 
     def class_counts(cols : Array(String) = [] of String) : Hash(String, Hash(String, Int32))
       # Create an empty hash to store the counts of each label
-      counts = Hash(String, Hash(String, Int32)).new
-      
       cols = df.names if cols.empty?
-
 
       # Iterate through each row in the input array
       cols.each do |col|
-        counts[col] = tally(df[col].values)
+        @class_counts[col] = tally(df[col].values)
       end
-      counts
+      @class_counts
     end
 
     def tally(enumerable : Enumerable)
@@ -72,19 +70,30 @@ module DecisionTree
       return [true_rows, false_rows]
     end
 
-    def gini : Float64
-      # Get the counts of each class label in the dataset
-      counts = class_counts(["Price"])
+    def info_gain(left, right, current_uncertainty)
+      p = df[left].size / (df[left].size + df[right].size)
+      return current_uncertainty - p * gini(left) - (1 - p) * gini(right)
+    end
 
+    def gini(col) : Float64
+      # Get the counts of each class label in the dataset
+      counts = class_counts
       # Calculate the impurity using the Gini index formula
-      rows = 
+
       impurity = 1.0
+
       counts.each do |lbl, count|
-        prob_of_lbl = count / rows.size.to_f
+        prob_of_lbl = count[lbl] / @df[col].size.to_f
         impurity -= prob_of_lbl**2
       end
 
       return impurity
+    end
+
+    def fit()
+
+      pp gini = gini(y_vector.names[0])
+      pp info_gain("Longitude", "MedHouseVal", gini)
     end
   end
 end
