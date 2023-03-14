@@ -1,4 +1,4 @@
 module DataAnalisys
   include DataLoader
-  include DecisionTreeRegressor
+  include DecisionTree
 end

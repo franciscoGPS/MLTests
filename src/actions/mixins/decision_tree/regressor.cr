@@ -13,6 +13,8 @@ module DecisionTree
 
       raise WrongTargetFeatureSize.new unless y_col.size == 1
 
+      
+
       pp "in the regressor module"
     end
 
@@ -29,29 +31,27 @@ module DecisionTree
       rows.map { |row| row[col].to_s }.to_set
     end
 
-    def class_counts(rows : Array(Array)) : Hash(String, Int32)
+    def class_counts(cols : Array(String) = [] of String) : Hash(String, Hash(String, Int32))
       # Create an empty hash to store the counts of each label
-      counts = {} of String => Int32
+      counts = Hash(String, Hash(String, Int32)).new
+      
+      cols = df.names if cols.empty?
+
 
       # Iterate through each row in the input array
-      rows.each do |row|
-        # Extract the label from the last element of the row
-        label = row.last
-
-        # If the label has not been seen before, initialize its count to 0
-        unless counts[label]?
-          counts[label] = 0
-        end
-
-        # Increment the count of the label
-        counts[label] += 1
+      cols.each do |col|
+        counts[col] = tally(df[col].values)
       end
-
-      # Return the counts hash
-      return counts
+      counts
     end
 
-    def partition(rows : Array(ArString | Int32 | Float64ray), question : Question) : Tuple(Array(Array), Array(Array))
+    def tally(enumerable : Enumerable)
+      enumerable.each_with_object(Hash(String, Int32).new(0)) do |elem, counts|
+        counts[elem.to_s] += 1
+      end
+    end
+
+    def partition(rows : Array(String | Int32 | Float64), question : Question) : Tuple(Array(Array), Array(Array))
       # Create empty arrays for the true and false rows
       true_rows = [] of Array
       false_rows = [] of Array
@@ -72,11 +72,12 @@ module DecisionTree
       return [true_rows, false_rows]
     end
 
-    def gini(rows : Array(Array)) : Float64
+    def gini : Float64
       # Get the counts of each class label in the dataset
-      counts = class_counts(rows)
+      counts = class_counts(["Price"])
 
       # Calculate the impurity using the Gini index formula
+      rows = 
       impurity = 1.0
       counts.each do |lbl, count|
         prob_of_lbl = count / rows.size.to_f
